@@ -31,6 +31,11 @@ from torch_ema import ExponentialMovingAverage
 from packaging import version as pver
 import lpips
 
+def write_points_to_obj(points, filename):
+    with open(filename, 'w') as f:
+        for i in range(points.shape[0]):
+            f.write('v {} {} {}\n'.format(points[i, 0], points[i, 1], points[i, 2]))
+            
 def custom_meshgrid(*args):
     # ref: https://pytorch.org/docs/stable/generated/torch.meshgrid.html?highlight=meshgrid#torch.meshgrid
     if pver.parse(torch.__version__) < pver.parse('1.10'):
@@ -238,7 +243,7 @@ def get_rays(poses, intrinsics, H, W, N=-1, patch_size=1, coords=None):
         fx, fy, cx, cy = intrinsics
     else:
         fx, fy, cx, cy = intrinsics[:, 0], intrinsics[:, 1], intrinsics[:, 2], intrinsics[:, 3]
-
+    #i and j are each camera's image coordinate
     i, j = custom_meshgrid(torch.linspace(0, W-1, W, device=device), torch.linspace(0, H-1, H, device=device)) # float
     i = i.t().contiguous().view(-1) + 0.5
     j = j.t().contiguous().view(-1) + 0.5
@@ -283,7 +288,7 @@ def get_rays(poses, intrinsics, H, W, N=-1, patch_size=1, coords=None):
     xs = (i - cx) / fx
     ys = -(j - cy) / fy # y is flipped
     directions = torch.stack((xs, ys, zs), dim=-1) # [N, 3]
-    # do not normalize to get actual depth, ref: https://github.com/dunbar12138/DSNeRF/issues/29
+    # do not normalize to get actual depth, `ref: https://github.com/dunbar12138/DSNeRF/issues/29
     # directions = directions / torch.norm(directions, dim=-1, keepdim=True) 
     rays_d = (directions.unsqueeze(1) @ poses[:, :3, :3].transpose(-1, -2)).squeeze(1) # [N, 1, 3] @ [N, 3, 3] --> [N, 1, 3]
 
@@ -631,7 +636,7 @@ class Trainer(object):
         rays_d = data['rays_d'] # [N, 3]
         index = data['index'] # [1/N]
         cam_near_far = data['cam_near_far'] if 'cam_near_far' in data else None # [1/N, 2] or None
-
+        
         images = data['images'] # [N, 3/4]
 
         N, C = images.shape
@@ -712,6 +717,8 @@ class Trainer(object):
 
             pred_rgb = outputs['image']
             loss = self.opt.lambda_rgb * self.criterion(pred_rgb, gt_rgb).mean(-1) # [H, W]
+            pred = pred_rgb.view(H, W, 3).detach().cpu()#.numpy().astype(np.uint8) * 255
+            im = gt_rgb.view(H, W, 3).detach().cpu()#.numpy().astype(np.uint8) * 255
 
             if gt_mask is not None and self.opt.lambda_mask > 0:
                 pred_mask = outputs['weights_sum']
@@ -1184,7 +1191,7 @@ class Trainer(object):
 
             if self.local_rank == 0:
                 if self.report_metric_at_train:
-                    for metric in self.metrics:
+                      for metric in self.metrics:
                         metric.update(preds, truths)
                         
                 if self.use_tensorboardX:

@@ -83,7 +83,7 @@ class NeRFNetwork(NeRFRenderer):
         # d: [N, 3], nomalized in [-1, 1]
         # c: [1/N, individual_dim]
 
-        sigma = self.density(x)['sigma']
+        sigma = self.density(x)
         color, specular = self.rgb(x, d, c, shading)
 
         return sigma, color, specular
@@ -105,7 +105,7 @@ class NeRFNetwork(NeRFRenderer):
 
         results['sigma'] = sigma
 
-        return results
+        return results['sigma']
 
     # init the sdf to two spheres by pretraining, assume view cameras fall between the spheres
     def init_double_sphere(self, r1=0.5, r2=1.5, iters=8192, batch_size=8192):

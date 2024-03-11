@@ -13,7 +13,7 @@ if __name__ == '__main__':
     parser.add_argument('path', type=str)
     parser.add_argument('-O', action='store_true', help="recommended settings")
     parser.add_argument('--workspace', type=str, default='workspace')
-    parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--seed', type=int, default=10)
     parser.add_argument('--stage', type=int, default=0, help="training stage")
     parser.add_argument('--ckpt', type=str, default='latest')
     parser.add_argument('--fp16', action='store_true', help="use amp mixed precision training")
@@ -252,15 +252,15 @@ if __name__ == '__main__':
             
             # last validation
             trainer.metrics = [PSNRMeter(), SSIMMeter(), LPIPSMeter(device=device)]
-            trainer.evaluate(valid_loader)
+            # trainer.evaluate(valid_loader)
 
             # also test
             test_loader = NeRFDataset(opt, device=device, type='test').dataloader()
             
-            if test_loader.has_gt:
-                trainer.evaluate(test_loader) # blender has gt, so evaluate it.
+            # if test_loader.has_gt:
+                # trainer.evaluate(test_loader) # blender has gt, so evaluate it.
             
-            trainer.test(test_loader, write_video=True) # test and save video
+            # trainer.test(test_loader, write_video=True) # test and save video
             
             if opt.stage == 1:
                 trainer.export_stage1(resolution=opt.texture_size)

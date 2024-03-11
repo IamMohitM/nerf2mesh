@@ -21,7 +21,10 @@ torch-scatter
 xatlas
 scikit-learn
 torchmetrics
-pytorch3d
+fvcore
+# pytorch3d
+pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
+# comment the check of cuda version check in torch/utils/cpp_extension.py `_check_cuda_version`
 
 git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch
 git+https://github.com/NVlabs/nvdiffrast/

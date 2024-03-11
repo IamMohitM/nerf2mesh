@@ -16,4 +16,5 @@ ablation.sh
 runall_firekeeper*
 runall_dtu*
 
-env/
+venv/
+temp/

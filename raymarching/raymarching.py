@@ -7,7 +7,7 @@ from torch.autograd import Function
 from torch.cuda.amp import custom_bwd, custom_fwd
 
 try:
-    import _raymarching_mob as _backend
+    import _raymarching_mob as _backend #@IgnoreException
 except ImportError:
     from .backend import _backend
 
@@ -204,7 +204,7 @@ class _march_rays_train(Function):
             xyzs: float, [M, 3], all generated points' coords. (all rays concated, need to use `rays` to extract points belonging to each ray)
             dirs: float, [M, 3], all generated points' view dirs.
             ts: float, [M, 2], all generated points' ts.
-            rays: int32, [N, 2], all rays' (point_offset, point_count), e.g., xyzs[rays[i, 0]:(rays[i, 0] + rays[i, 1])] --> points belonging to rays[i, 0]
+            rays: int32, [N, 2], all rays' (point_offs  et, point_count), e.g., xyzs[rays[i, 0]:(rays[i, 0] + rays[i, 1])] --> points belonging to rays[i, 0]
         '''
 
         if not rays_o.is_cuda: rays_o = rays_o.cuda()
@@ -237,7 +237,7 @@ class _march_rays_train(Function):
         dirs = torch.zeros(M, 3, dtype=rays_o.dtype, device=rays_o.device)
         ts = torch.zeros(M, 2, dtype=rays_o.dtype, device=rays_o.device)
 
-        # second pass: write outputs
+        # second pass: write outputs - xyzs, dirs, ts are all modified in-place
         _backend.march_rays_train(rays_o, rays_d, density_bitfield, bound, contract, dt_gamma, max_steps, N, C, H, nears, fars, xyzs, dirs, ts, rays, step_counter, noises)
 
         return xyzs, dirs, ts, rays
